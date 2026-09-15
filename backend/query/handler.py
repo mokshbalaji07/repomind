@@ -20,8 +20,8 @@ from common.logger import get_logger
 from common.embeddings import GeminiEmbeddingClient
 from common.vector_store import VectorStore
 
-from query.retriever import Retriever
-from query.prompt_builder import (
+from retriever import Retriever
+from prompt_builder import (
     build_context, 
     build_prompt, 
     build_insufficient_evidence_response, 

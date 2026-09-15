@@ -13,19 +13,19 @@ def test_embed_text_success(mock_urlopen):
     """returns embedding list"""
     mock_response = MagicMock()
     # The real implementation expects: {'embedding': {'values': [...]}}
-    mock_response.read.return_value = json.dumps({"embedding": {"values": [0.1]*768}}).encode()
+    mock_response.read.return_value = json.dumps({"embedding": {"values": [0.1]*config.EMBEDDING_DIMENSION}}).encode()
     # Need mock_urlopen to act as context manager
     mock_urlopen.return_value.__enter__.return_value = mock_response
 
     client = GeminiEmbeddingClient(api_key="test")
     emb = client.embed_text("test")
-    assert len(emb) == 768
+    assert len(emb) == config.EMBEDDING_DIMENSION
 
 @patch('urllib.request.urlopen')
 def test_embed_query_uses_retrieval_query_task(mock_urlopen):
     """task_type is RETRIEVAL_QUERY"""
     mock_response = MagicMock()
-    mock_response.read.return_value = json.dumps({"embedding": {"values": [0.1]*768}}).encode()
+    mock_response.read.return_value = json.dumps({"embedding": {"values": [0.1]*config.EMBEDDING_DIMENSION}}).encode()
     mock_urlopen.return_value.__enter__.return_value = mock_response
 
     client = GeminiEmbeddingClient(api_key="test")

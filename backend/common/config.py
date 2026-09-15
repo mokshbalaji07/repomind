@@ -25,7 +25,7 @@ GEMINI_API_KEY_SSM_PARAM = os.environ.get('GEMINI_API_KEY_SSM_PARAM', '/repomind
 GITHUB_TOKEN_SSM_PARAM = os.environ.get('GITHUB_TOKEN_SSM_PARAM', '/repomind/prod/github-token')
 
 # --- Embedding Tuning ---
-EMBEDDING_DIMENSION = 768
+EMBEDDING_DIMENSION = 3072
 EMBEDDING_MAX_CONCURRENCY = int(os.environ.get('EMBEDDING_MAX_CONCURRENCY', '5'))
 EMBEDDING_MAX_RETRIES = int(os.environ.get('EMBEDDING_MAX_RETRIES', '3'))
 EMBEDDING_RPM_LIMIT = int(os.environ.get('EMBEDDING_RPM_LIMIT', '1500'))

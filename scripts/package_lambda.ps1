@@ -17,10 +17,7 @@ Copy-Item -Recurse backend/common $buildDir/common
 Copy-Item backend/ingestion/*.py $buildDir/
 Copy-Item backend/ingestion/requirements.txt $buildDir/
 
-pip install -r backend/ingestion/requirements.txt -t $buildDir --platform manylinux2014_x86_64 --python-version 3.10 --only-binary=:all: --quiet
-
-Compress-Archive -Path "$buildDir/*" -DestinationPath packages/ingestion.zip -Force
-Write-Host 'Ingestion Lambda packaged: packages/ingestion.zip'
+pip install -r backend/ingestion/requirements.txt -t $buildDir --platform manylinux2014_x86_64 --python-version 3.13 --only-binary=:all: --quiet
 
 # --- Query Lambda ---  
 Write-Host 'Packaging query Lambda...'
@@ -32,9 +29,4 @@ Copy-Item -Recurse backend/common $buildDir/common
 Copy-Item backend/query/*.py $buildDir/
 Copy-Item backend/query/requirements.txt $buildDir/
 
-pip install -r backend/query/requirements.txt -t $buildDir --platform manylinux2014_x86_64 --python-version 3.10 --only-binary=:all: --quiet
-
-Compress-Archive -Path "$buildDir/*" -DestinationPath packages/query.zip -Force
-Write-Host 'Query Lambda packaged: packages/query.zip'
-
-Write-Host 'All Lambda packages created successfully.'
+pip install -r backend/query/requirements.txt -t $buildDir --platform manylinux2014_x86_64 --python-version 3.13 --only-binary=:all: --quiet

@@ -23,8 +23,8 @@ from common.chunker import chunk_file
 from common.embeddings import GeminiEmbeddingClient
 from common.vector_store import VectorStore
 from common.dynamo import StateManager
-from ingestion.github_client import GitHubClient
-from ingestion.file_filter import filter_changes, is_supported_file, get_language
+from github_client import GitHubClient
+from file_filter import filter_changes, is_supported_file, get_language
 
 logger = get_logger('ingestion')
 

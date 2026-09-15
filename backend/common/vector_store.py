@@ -68,7 +68,7 @@ class VectorStore:
                     buffer = io.BytesIO(response['Body'].read())
                     with np.load(buffer, allow_pickle=True) as data:
                         all_embeddings.append(data['embeddings'])
-                        all_metadata.extend(json.loads(data['metadata']))
+                        all_metadata.extend(json.loads(data['metadata'].item()))
                 except Exception as e:
                     logger.error(f"Failed to load {s3_key}: {e}")
 
@@ -93,7 +93,7 @@ class VectorStore:
             response = self.s3.get_object(Bucket=self.bucket, Key=index_key)
             buffer = io.BytesIO(response['Body'].read())
             with np.load(buffer, allow_pickle=True) as data:
-                return data['embeddings'], json.loads(data['metadata'])
+                return data['embeddings'], json.loads(data['metadata'].item())
         except self.s3.exceptions.NoSuchKey:
             return np.array([]), []
         except Exception as e:
