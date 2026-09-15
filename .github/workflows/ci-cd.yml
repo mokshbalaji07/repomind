@@ -1,0 +1,115 @@
+name: RepoMind CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -r requirements-dev.txt
+      - run: pytest backend/tests/ -v
+
+  package:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Package ingestion Lambda
+        run: |
+          mkdir -p packages/ingestion_build
+          cp -r backend/common packages/ingestion_build/common
+          cp -r backend/ingestion/* packages/ingestion_build/
+          pip install -r backend/ingestion/requirements.txt -t packages/ingestion_build/ --platform manylinux2014_x86_64 --only-binary=:all:
+          cd packages/ingestion_build && zip -r ../ingestion.zip . -x '__pycache__/*' '*.pyc'
+      - name: Package query Lambda
+        run: |
+          mkdir -p packages/query_build
+          cp -r backend/common packages/query_build/common
+          cp -r backend/query/* packages/query_build/
+          pip install -r backend/query/requirements.txt -t packages/query_build/ --platform manylinux2014_x86_64 --only-binary=:all:
+          cd packages/query_build && zip -r ../query.zip . -x '__pycache__/*' '*.pyc'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lambda-packages
+          path: packages/*.zip
+
+  terraform-plan:
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::736486261162:role/repomind-github-actions-role
+          aws-region: ap-south-1
+      - uses: actions/download-artifact@v4
+        with:
+          name: lambda-packages
+          path: packages/
+      - uses: hashicorp/setup-terraform@v3
+      - name: Terraform Init
+        run: terraform init
+        working-directory: infrastructure/terraform
+      - name: Terraform Format Check
+        run: terraform fmt -check
+        working-directory: infrastructure/terraform
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: infrastructure/terraform
+      - name: Terraform Plan
+        run: terraform plan -no-color
+        working-directory: infrastructure/terraform
+
+  trigger-ingestion:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::736486261162:role/repomind-github-actions-role
+          aws-region: ap-south-1
+      - name: Trigger Step Functions
+        run: |
+          aws stepfunctions start-execution \
+            --state-machine-arn arn:aws:states:ap-south-1:736486261162:stateMachine:repomind-ingestion-workflow \
+            --input '{"repo": "${{ github.repository }}", "commit_sha": "${{ github.sha }}", "ref": "${{ github.ref }}", "before": "${{ github.event.before }}", "after": "${{ github.event.after }}"}'
+
+  # deploy job is manual — requires approval
+  deploy:
+    needs: terraform-plan
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::736486261162:role/repomind-github-actions-role
+          aws-region: ap-south-1
+      - uses: actions/download-artifact@v4
+        with:
+          name: lambda-packages
+          path: packages/
+      - uses: hashicorp/setup-terraform@v3
+      - name: Terraform Init
+        run: terraform init
+        working-directory: infrastructure/terraform
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        working-directory: infrastructure/terraform

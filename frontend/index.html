@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RepoMind — Code-Aware Repository Q&A</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>RepoMind</h1>
+            <p>Code-Aware Repository Q&A | Ask natural language questions about any GitHub repository</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="config-section card">
+            <h2>Configuration</h2>
+            <div class="input-group">
+                <label for="api-endpoint">Query API Endpoint (Lambda Function URL):</label>
+                <input type="text" id="api-endpoint" placeholder="https://..." required>
+                <small>Enter the AWS Lambda Function URL after deployment.</small>
+            </div>
+        </section>
+
+        <section class="query-section card">
+            <h2>Ask a Question</h2>
+            <form id="query-form">
+                <div class="input-group">
+                    <label for="repo-input">GitHub Repository:</label>
+                    <input type="text" id="repo-input" placeholder="owner/repository" required pattern="^[^/]+/[^/]+$">
+                </div>
+                <div class="input-group">
+                    <label for="question-input">Question:</label>
+                    <textarea id="question-input" rows="4" placeholder="e.g., Where is user authentication implemented?" required></textarea>
+                </div>
+                <button type="submit" id="submit-btn">Ask RepoMind</button>
+            </form>
+        </section>
+
+        <div id="loading" class="loading-spinner hidden">
+            <div class="spinner"></div>
+            <p>Analyzing repository...</p>
+        </div>
+
+        <section id="results-section" class="results-section hidden">
+            <div id="status-message" class="status-message"></div>
+            
+            <div class="answer-card card">
+                <h3>Answer</h3>
+                <div id="answer-content" class="markdown-content"></div>
+            </div>
+
+            <div class="sources-section">
+                <h3>Sources Referenced</h3>
+                <div id="sources-list" class="sources-list"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>RepoMind &mdash; Cloud-Native Repository Q&A | Built with AWS Lambda, Step Functions, S3, DynamoDB, Gemini</p>
+        </div>
+    </footer>
+    <script src="app.js"></script>
+</body>
+</html>
