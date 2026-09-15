@@ -1,7 +1,7 @@
 # Package ingestion Lambda
 $ErrorActionPreference = 'Stop'
 
-$projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$projectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $projectRoot
 
 # Create packages directory
@@ -17,7 +17,7 @@ Copy-Item -Recurse backend/common $buildDir/common
 Copy-Item backend/ingestion/*.py $buildDir/
 Copy-Item backend/ingestion/requirements.txt $buildDir/
 
-pip install -r backend/ingestion/requirements.txt -t $buildDir --platform manylinux2014_x86_64 --only-binary=:all: --quiet
+pip install -r backend/ingestion/requirements.txt -t $buildDir --platform manylinux2014_x86_64 --python-version 3.10 --only-binary=:all: --quiet
 
 Compress-Archive -Path "$buildDir/*" -DestinationPath packages/ingestion.zip -Force
 Write-Host 'Ingestion Lambda packaged: packages/ingestion.zip'
@@ -32,7 +32,7 @@ Copy-Item -Recurse backend/common $buildDir/common
 Copy-Item backend/query/*.py $buildDir/
 Copy-Item backend/query/requirements.txt $buildDir/
 
-pip install -r backend/query/requirements.txt -t $buildDir --platform manylinux2014_x86_64 --only-binary=:all: --quiet
+pip install -r backend/query/requirements.txt -t $buildDir --platform manylinux2014_x86_64 --python-version 3.10 --only-binary=:all: --quiet
 
 Compress-Archive -Path "$buildDir/*" -DestinationPath packages/query.zip -Force
 Write-Host 'Query Lambda packaged: packages/query.zip'

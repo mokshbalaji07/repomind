@@ -4,7 +4,7 @@ resource "aws_lambda_function_url" "query" {
 
   cors {
     allow_origins = ["*"]
-    allow_methods = ["POST", "OPTIONS"]
+    allow_methods = ["POST"]
     allow_headers = ["content-type"]
     max_age       = 3600
   }

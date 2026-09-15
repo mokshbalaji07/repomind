@@ -16,6 +16,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "vectors" {
     id     = "expire_incomplete_multipart_uploads"
     status = "Enabled"
 
+    filter {
+      prefix = ""
+    }
+
     abort_incomplete_multipart_upload {
       days_after_initiation = 7
     }

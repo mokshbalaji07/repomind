@@ -107,8 +107,8 @@ resource "aws_sfn_state_machine" "ingestion" {
         Type     = "Task"
         Resource = aws_lambda_function.ingestion.arn
         Parameters = {
-          "operation"  = "filter_files"
-          "changes.$"  = "$.discovery.changes"
+          "operation" = "filter_files"
+          "changes.$" = "$.discovery.changes"
         }
         ResultPath = "$.filtered"
         Next       = "ProcessFiles"
@@ -125,10 +125,10 @@ resource "aws_sfn_state_machine" "ingestion" {
         ItemsPath      = "$.filtered.files_to_process"
         MaxConcurrency = 5
         Parameters = {
-          "operation"    = "process_file"
-          "repo.$"       = "$.repo"
-          "commit_sha.$" = "$.commit_sha"
-          "file_path.$"  = "$$.Map.Item.Value.file_path"
+          "operation"     = "process_file"
+          "repo.$"        = "$.repo"
+          "commit_sha.$"  = "$.commit_sha"
+          "file_path.$"   = "$$.Map.Item.Value.file_path"
           "change_type.$" = "$$.Map.Item.Value.change_type"
         }
         Iterator = {
@@ -161,8 +161,8 @@ resource "aws_sfn_state_machine" "ingestion" {
         Type     = "Task"
         Resource = aws_lambda_function.ingestion.arn
         Parameters = {
-          "operation"        = "handle_deletions"
-          "repo.$"           = "$.repo"
+          "operation"         = "handle_deletions"
+          "repo.$"            = "$.repo"
           "files_to_delete.$" = "$.filtered.files_to_delete"
         }
         ResultPath = "$.deletions"

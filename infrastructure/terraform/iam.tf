@@ -57,7 +57,7 @@ data "aws_iam_policy_document" "ingestion_policy" {
   }
 
   statement {
-    actions = ["kms:Decrypt"]
+    actions   = ["kms:Decrypt"]
     resources = ["arn:aws:kms:${var.aws_region}:${var.aws_account_id}:alias/aws/ssm"]
   }
 }
@@ -113,7 +113,7 @@ data "aws_iam_policy_document" "query_policy" {
   }
 
   statement {
-    actions = ["kms:Decrypt"]
+    actions   = ["kms:Decrypt"]
     resources = ["arn:aws:kms:${var.aws_region}:${var.aws_account_id}:alias/aws/ssm"]
   }
 }
@@ -142,7 +142,7 @@ resource "aws_iam_role" "step_functions" {
 
 data "aws_iam_policy_document" "step_functions_policy" {
   statement {
-    actions = ["lambda:InvokeFunction"]
+    actions   = ["lambda:InvokeFunction"]
     resources = [aws_lambda_function.ingestion.arn]
   }
 
@@ -203,7 +203,7 @@ data "aws_iam_policy_document" "github_actions_policy" {
   }
 
   statement {
-    actions = ["s3:PutObject"]
+    actions   = ["s3:PutObject"]
     resources = ["${aws_s3_bucket.vectors.arn}/deployments/*"]
   }
 
