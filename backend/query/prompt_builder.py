@@ -1,3 +1,4 @@
+"""Prompt building and formatting for the RAG (Retrieval-Augmented Generation) pipeline."""
 import json
 from typing import List, Tuple, Dict, Any
 

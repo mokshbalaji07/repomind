@@ -1,3 +1,4 @@
+"""AWS Lambda handler for the Query API and RAG (Retrieval-Augmented Generation) pipeline."""
 import json
 import os
 import random
@@ -76,25 +77,18 @@ def call_gemini_answer(api_key: str, messages: list) -> str:
             raise
     return 'Failed to generate answer after retries.'
 
-def cors_response(status_code: int, body) -> dict:
-    """Return a response with CORS headers."""
+def create_response(status_code: int, body) -> dict:
+    """Return a standard API response."""
     return {
         'statusCode': status_code,
         'headers': {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
         },
         'body': json.dumps(body) if isinstance(body, dict) else body,
     }
 
 def handler(event, context):
     """Lambda Function URL handler."""
-    # Handle CORS preflight
-    if event.get('requestContext', {}).get('http', {}).get('method') == 'OPTIONS':
-        return cors_response(200, '')
-    
     try:
         # Parse and validate request
         body = event.get('body', '')
@@ -102,27 +96,27 @@ def handler(event, context):
             body = base64.b64decode(body).decode('utf-8')
         
         if len(body) > MAX_REQUEST_SIZE:
-            return cors_response(413, {'error': 'Request too large'})
+            return create_response(413, {'error': 'Request too large'})
         
         try:
             data = json.loads(body)
         except (json.JSONDecodeError, TypeError):
-            return cors_response(400, {'error': 'Invalid JSON'})
+            return create_response(400, {'error': 'Invalid JSON'})
         
         # Validate required fields
         repo = data.get('repo', '').strip()
         question = data.get('question', '').strip()
         
         if not repo:
-            return cors_response(400, {'error': 'Missing required field: repo'})
+            return create_response(400, {'error': 'Missing required field: repo'})
         if not question:
-            return cors_response(400, {'error': 'Missing required field: question'})
+            return create_response(400, {'error': 'Missing required field: question'})
         if len(question) > 2000:
-            return cors_response(400, {'error': 'Question too long (max 2000 chars)'})
+            return create_response(400, {'error': 'Question too long (max 2000 chars)'})
         
         # Validate repo format (owner/name)
         if '/' not in repo or len(repo.split('/')) != 2:
-            return cors_response(400, {'error': 'Invalid repo format. Use owner/name'})
+            return create_response(400, {'error': 'Invalid repo format. Use owner/name'})
         
         # Initialize clients
         gemini_key = _get_gemini_key()
@@ -135,7 +129,7 @@ def handler(event, context):
         
         if not results:
             answer = build_insufficient_evidence_response(question, repo)
-            return cors_response(200, {'answer': answer, 'sources': [], 'repo': repo, 'question': question})
+            return create_response(200, {'answer': answer, 'sources': [], 'repo': repo, 'question': question})
         
         # Build context and call Gemini for answer
         context_str = build_context(results)
@@ -144,7 +138,7 @@ def handler(event, context):
         answer = call_gemini_answer(gemini_key, messages)
         sources = format_sources(results)
         
-        return cors_response(200, {
+        return create_response(200, {
             'answer': answer,
             'sources': sources,
             'repo': repo,
@@ -153,4 +147,4 @@ def handler(event, context):
     
     except Exception as e:
         logger.error(f'Query failed: {type(e).__name__}: {e}', exc_info=True)
-        return cors_response(500, {'error': 'Internal server error'})
+        return create_response(500, {'error': 'Internal server error'})

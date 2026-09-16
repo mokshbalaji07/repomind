@@ -1,7 +1,8 @@
 """Vector retrieval logic for RepoMind.
 
+This module is a core component of the RAG (Retrieval-Augmented Generation) pipeline.
 Loads the consolidated index from S3, computes cosine similarity against
-the query embedding, and returns the top-K most relevant chunks.
+the query embedding, and returns the top-K most relevant chunks to augment the LLM prompt.
 """
 from typing import List, Tuple, Dict, Any
 import logging
