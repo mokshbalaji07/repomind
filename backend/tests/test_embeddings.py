@@ -7,6 +7,8 @@ from unittest.mock import patch, MagicMock
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from common.embeddings import GeminiEmbeddingClient
+from common.models import CodeChunk
+from common import config
 
 @patch('urllib.request.urlopen')
 def test_embed_text_success(mock_urlopen):
