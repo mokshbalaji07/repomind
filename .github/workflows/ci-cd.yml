@@ -48,36 +48,9 @@ jobs:
           name: lambda-packages
           path: packages/*.zip
 
-  terraform-plan:
-    needs: package
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::736486261162:role/repomind-github-actions-role
-          aws-region: ap-south-1
-      - uses: actions/download-artifact@v4
-        with:
-          name: lambda-packages
-          path: packages/
-      - uses: hashicorp/setup-terraform@v3
-      - name: Terraform Init
-        run: terraform init
-        working-directory: infrastructure/terraform
-      - name: Terraform Format Check
-        run: terraform fmt -check
-        working-directory: infrastructure/terraform
-      - name: Terraform Validate
-        run: terraform validate
-        working-directory: infrastructure/terraform
-      - name: Terraform Plan
-        run: terraform plan -no-color
-        working-directory: infrastructure/terraform
-
   trigger-ingestion:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [test]
+    needs: [test, package]
     runs-on: ubuntu-latest
     steps:
       - uses: aws-actions/configure-aws-credentials@v4
@@ -89,27 +62,3 @@ jobs:
           aws stepfunctions start-execution \
             --state-machine-arn arn:aws:states:ap-south-1:736486261162:stateMachine:repomind-ingestion-workflow \
             --input '{"repo": "${{ github.repository }}", "commit_sha": "${{ github.sha }}", "ref": "${{ github.ref }}", "before": "${{ github.event.before }}", "after": "${{ github.event.after }}"}'
-
-  # deploy job is manual — requires approval
-  deploy:
-    needs: terraform-plan
-    runs-on: ubuntu-latest
-    environment: production
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::736486261162:role/repomind-github-actions-role
-          aws-region: ap-south-1
-      - uses: actions/download-artifact@v4
-        with:
-          name: lambda-packages
-          path: packages/
-      - uses: hashicorp/setup-terraform@v3
-      - name: Terraform Init
-        run: terraform init
-        working-directory: infrastructure/terraform
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
-        working-directory: infrastructure/terraform
