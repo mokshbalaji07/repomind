@@ -87,16 +87,17 @@ graph TD
 CCD_Project/
 ├── .github/
 │   └── workflows/
-├── docs/
 ├── infrastructure/
-│   ├── main.tf
-│   ├── variables.tf
-│   └── ...
-├── src/
+│   ├── terraform/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── ...
+├── backend/
 │   ├── ingestion/
 │   ├── query/
-│   └── shared/
-├── tests/
+│   ├── common/
+│   └── tests/
+├── packages/
 ├── README.md
 ├── requirements.txt
 └── requirements-dev.txt
@@ -201,7 +202,7 @@ You can interact with RepoMind via the deployed Lambda Function URL.
 ```bash
 curl -X POST https://<YOUR_LAMBDA_FUNCTION_URL>.lambda-url.ap-south-1.on.aws/ \
      -H "Content-Type: application/json" \
-     -d '{"query": "How is the AST parsing implemented in this repository?"}'
+     -d '{"repo": "mokshbalaji07/repomind", "question": "How is the AST parsing implemented in this repository?"}'
 ```
 
 **Example Response:**
