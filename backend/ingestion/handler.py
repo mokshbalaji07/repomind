@@ -104,7 +104,13 @@ def op_check_idempotency(event: dict) -> dict:
 
 
 def op_discover_files(event: dict) -> dict:
-    """Use the GitHub REST API to discover changed files."""
+    """Use the GitHub REST API to discover changed files.
+
+    When no consolidated vector index exists in S3, this forces a full-repo
+    initial ingestion so that deploying RepoMind against an existing
+    repository correctly indexes every supported file — not just the diff
+    from the latest commit.
+    """
     repo = event['repo']
     commit_sha = event['commit_sha']
     before_sha = event.get('before', '')
@@ -112,16 +118,24 @@ def op_discover_files(event: dict) -> dict:
     token = _get_github_token()
     client = GitHubClient(token=token)
 
+    # State-aware initial-ingestion detection: if no consolidated index
+    # exists yet, treat this as the initial ingestion even when GitHub
+    # provides a valid before_sha (which happens when RepoMind is deployed
+    # to an already-existing repository with commit history).
+    vs = VectorStore()
+    index_already_exists = vs.index_exists(repo)
+
     changes: list[FileChange] = []
     is_initial = (
-        not before_sha
+        not index_already_exists
+        or not before_sha
         or before_sha == '0' * 40
     )
 
     if is_initial:
         file_paths = client.get_tree(repo, commit_sha)
         changes = [FileChange(file_path=fp, change_type='added') for fp in file_paths]
-        logger.info(f"Initial ingestion: {len(changes)} files discovered")
+        logger.info(f"Initial ingestion: {len(changes)} files discovered (index_existed={index_already_exists})")
     else:
         changes = client.get_compare(repo, before_sha, commit_sha)
         logger.info(f"Incremental ingestion: {len(changes)} changes discovered")

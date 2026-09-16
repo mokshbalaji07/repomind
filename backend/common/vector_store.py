@@ -85,6 +85,25 @@ class VectorStore:
         self.s3.put_object(Bucket=self.bucket, Key=index_key, Body=buffer.getvalue())
         return len(final_embeddings)
 
+    def index_exists(self, repo: str) -> bool:
+        """Check whether a consolidated vector index exists for this repo.
+
+        Returns True if the index object exists in S3, False if it does not.
+        Raises on unexpected AWS errors so callers can fail safely rather
+        than silently falling back to a full re-index.
+        """
+        safe_repo = self._safe_path(repo)
+        index_key = f"{config.S3_PREFIX_INDEX}/{safe_repo}/index.npz"
+        try:
+            self.s3.head_object(Bucket=self.bucket, Key=index_key)
+            return True
+        except self.s3.exceptions.ClientError as e:
+            code = e.response.get('Error', {}).get('Code', '')
+            if code == '404':
+                return False
+            # Unexpected error (permissions, network, etc.) — propagate it
+            raise
+
     def load_index(self, repo: str) -> Tuple[np.ndarray, List[dict]]:
         safe_repo = self._safe_path(repo)
         index_key = f"{config.S3_PREFIX_INDEX}/{safe_repo}/index.npz"
